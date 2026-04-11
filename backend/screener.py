@@ -77,10 +77,3 @@ for epoch in range(300):
     optimizer.step()
 
 torch.save(model.state_dict(), "../screener_model.pth")
-
-model.eval()
-with torch.no_grad():
-    test_predictions = model(X_q_test, X_p_test).squeeze()
-    predicted_labels = (test_predictions > 0.5).float()
-    accuracy = (predicted_labels == y_test).float().mean().item()
-    print(f"Test Accuracy: {accuracy * 100:.2f}%")
