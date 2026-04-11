@@ -1,0 +1,7 @@
+{
+  "job_id": "d7didf15a5qc73dpt9f0",
+  "hardware_energy": -0.8079413893710989,
+  "vqe_energy": -0.896408,
+  "zne_energy": -0.346459,
+  "backend": "ibm_kingston"
+}
