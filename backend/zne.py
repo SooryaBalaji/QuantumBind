@@ -13,7 +13,7 @@ def _run_noisy_circuit(args):
     noise_op = qml.noise.partial_wires(qml.PhaseDamping, noise)
     pd_noise_model = qml.NoiseModel({fcond: noise_op})
 
-    dev_mixed = qml.device("default.mixed", wires=n_qubits)
+    dev_mixed = qml.device("lightning.mixed", wires=n_qubits)
     dev_noisy = qml.add_noise(dev_mixed, noise_model=pd_noise_model)
 
     @qml.qnode(dev_noisy)
