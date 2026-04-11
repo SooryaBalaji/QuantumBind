@@ -53,31 +53,42 @@ def _save_cache(data: dict):
 
 
 def compute_results() -> dict:
-
     with _cache_lock:
         if _cache_is_fresh():
             return _load_cache()
+
+        print("[timer] Starting parallel quantum jobs...")
+        t0 = time.time()
 
         with ProcessPoolExecutor(max_workers=2) as pool:
             vqe_future = pool.submit(_run_vqe)
             zne_future = pool.submit(_run_zne)
 
-            vqe_energy       = vqe_future.result()   # blocks until done
-            zne_energy       = zne_future.result()
+            t1 = time.time()
+            vqe_energy = vqe_future.result()
+            print(f"[timer] VQE done: {time.time() - t1:.2f}s")
 
+            t2 = time.time()
+            zne_energy = zne_future.result()
+            print(f"[timer] ZNE done: {time.time() - t2:.2f}s")
+
+        print(f"[timer] Both jobs done: {time.time() - t0:.2f}s total")
+
+        t3 = time.time()
         from zne import get_sherbrooke_energy
         sherbrooke_energy = get_sherbrooke_energy()
 
         from decision import predict_binding
         score = predict_binding(vqe_energy, zne_energy)
+        print(f"[timer] Decision done: {time.time() - t3:.2f}s")
 
         result = {
-            "vqe_energy":       round(float(vqe_energy),       6),
-            "sherbrooke_energy": round(float(sherbrooke_energy), 6),
-            "zne_energy":       round(float(zne_energy),        6),
-            "binding_score":    round(float(score),             4),
-            "decision":         "WORTH PURSUING" if score > 0.5 else "REJECT",
-            "computed_at":      time.time(),
+            "vqe_energy":        round(float(vqe_energy),        6),
+            "sherbrooke_energy": round(float(sherbrooke_energy),  6),
+            "zne_energy":        round(float(zne_energy),         6),
+            "binding_score":     round(float(score),              4),
+            "decision":          "WORTH PURSUING" if score > 0.5 else "REJECT",
+            "computed_at":       time.time(),
         }
         _save_cache(result)
         return result
