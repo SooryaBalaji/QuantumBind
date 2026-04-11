@@ -47,9 +47,21 @@ document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
 async function runHardware() {
     const loading = document.getElementById('hardwareLoading');
+    const hwEnergy = document.getElementById('hwEnergy');
+    const hwJobId = document.getElementById('hwJobId');
+
     loading.classList.remove('hidden');
-    const response = await fetch('/hardware-run', { method: 'POST' });
-    const data = await response.json();
-    document.getElementById('hwEnergy').textContent = data.hardware_energy.toFixed(4);
-    loading.classList.add('hidden');
+
+    try {
+        const response = await fetch('/hardware-run', { method: 'POST' });
+        const data = await response.json();
+
+        document.getElementById('hwEnergy').textContent = data.hardware_energy.toFixed(4);
+        document.getElementById('hwJobId').textContent = data.job_id;
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        loading.classList.add('hidden');
+    }
 }

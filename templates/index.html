@@ -63,7 +63,6 @@
             <span class="tick-item">Donanemab</span><span class="tick-sep">·</span>
             <span class="tick-item">AZD3293</span><span class="tick-sep">·</span>
             <span class="tick-item">JNJ-54861911</span><span class="tick-sep">·</span>
-            <!-- duplicate set for seamless loop -->
             <span class="tick-status">Screening</span>
             <span class="tick-sep">·</span>
             <span class="tick-item">Verubecestat</span><span class="tick-sep">·</span>
@@ -140,43 +139,23 @@
                     <div class="hardware-sub">127-qubit superconducting QPU</div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <section class="reviews-section">
-        <div class="reviews-inner">
-            <div class="section-label reveal">Validation</div>
-            <h2 class="section-h2 reveal reveal-delay-1">Trusted by researchers<br>at the <em>frontier</em>.</h2>
-            <div class="reviews-grid">
-                <div class="review-card fade-in">
-                    <p class="review-text">"The VQE+ZNE pipeline reduces systematic errors more effectively than any classical approximation we've benchmarked. The noise correction methodology is rigorous."</p>
-                    <div class="review-author">
-                        <div class="author-avatar">CS</div>
-                        <div>
-                            <div class="author-name">Dr. Chen Song</div>
-                            <div class="author-role">Computational Chemistry Lead · Stanford</div>
-                        </div>
-                    </div>
+            <button onclick="runHardware()" class="run-btn" style="margin-top:2rem">Run Live on IBM Kingston</button>
+            <div id="hardwareLoading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Submitting job to IBM Kingston quantum processor...</p>
+            </div>
+
+            <div class="hardware-grid" style="margin-top:1rem">
+                <div class="hardware-card">
+                    <div class="hardware-label">Live Hardware Energy</div>
+                    <div class="hardware-value" id="hwEnergy">—</div>
+                    <div class="hardware-sub">IBM Kingston (Hartree)</div>
                 </div>
-                <div class="review-card fade-in">
-                    <p class="review-text">"Real IBM quantum hardware validation sets this apart. The Job ID is reproducible on the IBM Quantum Platform — this is exactly how quantum claims should be verified."</p>
-                    <div class="review-author">
-                        <div class="author-avatar">MR</div>
-                        <div>
-                            <div class="author-name">Dr. Maya Roth</div>
-                            <div class="author-role">Quantum Research Scientist · IBM</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="review-card fade-in">
-                    <p class="review-text">"Finally a drug screening tool that doesn't pretend quantum noise doesn't exist. ZNE correction is the key insight here, and QuantumBind applies it correctly."</p>
-                    <div class="review-author">
-                        <div class="author-avatar">AK</div>
-                        <div>
-                            <div class="author-name">Arjun Kapoor</div>
-                            <div class="author-role">Drug Discovery Engineer · Genentech</div>
-                        </div>
-                    </div>
+                <div class="hardware-card">
+                    <div class="hardware-label">Live Job ID</div>
+                    <div class="hardware-value mono" id="hwJobId">—</div>
+                    <div class="hardware-sub">Verifiable on IBM Quantum Platform</div>
                 </div>
             </div>
         </div>
@@ -231,7 +210,6 @@
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
-        // Intersection observer — staggered fade-ins
         const fadeObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -256,15 +234,9 @@
         document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
         document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-        // Trigger hero on load
         requestAnimationFrame(() => {
             document.querySelectorAll('.hero .reveal').forEach(el => el.classList.add('visible'));
         });
     </script>
-<button onclick="runHardware()" class="run-btn" style="margin-top:2rem">Run Live on IBM Kingston</button>
-<div id="hardwareLoading" class="loading hidden">
-    <div class="spinner"></div>
-    <p>Submitting job to IBM Kingston quantum processor...</p>
-</div>
 </body>
 </html>
