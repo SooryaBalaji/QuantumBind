@@ -65,3 +65,7 @@ async function runHardware() {
         loading.classList.add('hidden');
     }
 }
+
+const graph = document.getElementById('energyGraph');
+graph.src = 'data:image/png;base64,' + data.graph;
+graph.style.display = 'block';
