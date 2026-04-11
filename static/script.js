@@ -1,3 +1,4 @@
+// Fetches quantum pipeline results from Flask backend and updates the UI
 async function runPipeline() {
     const btn = document.getElementById('runBtn');
     const loading = document.getElementById('loading');
