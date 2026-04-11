@@ -5,6 +5,7 @@ from torch.optim import Adam
 import numpy as np
 from sklearn.model_selection import train_test_split
 from data import generate_training_data
+import os
 
 
 np.random.seed(42)
@@ -46,34 +47,44 @@ class QuantumBindScreener(nn.Module):
 
 model = QuantumBindScreener().to(device)
 
-criterion = nn.BCELoss()
-optimizer = Adam(model.parameters(), lr=1e-3)
+MODEL_PATH = "../screener_model.pth"
 
-X_quantum, X_protein, y = generate_training_data()
+if os.path.exists(MODEL_PATH):
+    # Model already trained — just load weights, skip training entirely
+    print("[screener] Loading saved model...")
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=device, weights_only=True))
+    model.eval()
+    print("[screener] Model loaded")
+else:
+    # First run — train and save so we never train again
+    print("[screener] Training model for the first time...")
+    criterion = nn.BCELoss()
+    optimizer = Adam(model.parameters(), lr=1e-3)
 
-# Normalize both inputs
-X_quantum = (X_quantum - X_quantum.mean(dim=0)) / (X_quantum.std(dim=0) + 1e-8)
-X_protein = (X_protein - X_protein.mean(dim=0)) / (X_protein.std(dim=0) + 1e-8)
+    X_quantum, X_protein, y = generate_training_data()
 
-X_q_train, X_q_test, X_p_train, X_p_test, y_train, y_test = train_test_split(
-    X_quantum.numpy(), X_protein.numpy(), y.numpy(),
-    test_size=0.2, random_state=42
-)
+    X_quantum = (X_quantum - X_quantum.mean(dim=0)) / (X_quantum.std(dim=0) + 1e-8)
+    X_protein = (X_protein - X_protein.mean(dim=0)) / (X_protein.std(dim=0) + 1e-8)
 
-X_q_train = torch.tensor(X_q_train)
-X_q_test = torch.tensor(X_q_test)
-X_p_train = torch.tensor(X_p_train)
-X_p_test = torch.tensor(X_p_test)
-y_train = torch.tensor(y_train)
-y_test = torch.tensor(y_test)
+    X_q_train, X_q_test, X_p_train, X_p_test, y_train, y_test = train_test_split(
+        X_quantum.numpy(), X_protein.numpy(), y.numpy(),
+        test_size=0.2, random_state=42
+    )
 
+    X_q_train = torch.tensor(X_q_train)
+    X_p_train = torch.tensor(X_p_train)
+    y_train = torch.tensor(y_train)
 
-for epoch in range(300):
-    model.train()
-    optimizer.zero_grad()
-    output = model(X_q_train, X_p_train).squeeze()
-    loss = criterion(output, y_train)
-    loss.backward()
-    optimizer.step()
+    for epoch in range(300):
+        model.train()
+        optimizer.zero_grad()
+        output = model(X_q_train, X_p_train).squeeze()
+        loss = criterion(output, y_train)
+        loss.backward()
+        optimizer.step()
+        if epoch % 50 == 0:
+            print(f"[screener] Epoch {epoch} loss: {loss.item():.4f}")
 
-torch.save(model.state_dict(), "../screener_model.pth")
+    torch.save(model.state_dict(), MODEL_PATH)
+    print(f"[screener] Model trained and saved to {MODEL_PATH}")
+    model.eval()
