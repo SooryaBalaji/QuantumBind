@@ -5,7 +5,7 @@ import pennylane as qml
 import numpy as np
 
 
-def run_vqe():
+def run_zne():
    backend = FakeSherbrooke()
    noise_model = NoiseModel.from_backend(backend)
 
@@ -54,9 +54,6 @@ def run_vqe():
    coeffs = np.polyfit(noise_levels, energies, 1)
    zne_energy = np.polyval(coeffs, 0)
 
-
    return vqe_energy, sherbrooke_energy, zne_energy
 
-
-print(run_vqe())
-
+run_zne()
