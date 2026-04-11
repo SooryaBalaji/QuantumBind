@@ -31,7 +31,7 @@ def run_vqe():
 
 
    vqe_energy = energy
-   return vqe_energy, params, n_qubits
+   return vqe_energy, params, n_qubits, H, hf_state, s_wires, d_wires
 
 
 
