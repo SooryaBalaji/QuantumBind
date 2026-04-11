@@ -26,7 +26,7 @@ def run_vqe():
        return qml.expval(H)
 
 
-   for step in range(10):
+   for step in range(5):
        params, energy = optimizer.step_and_cost(circuit, params)
 
 
