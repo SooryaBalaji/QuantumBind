@@ -28,13 +28,6 @@ def _run_vqe():
     from zne import run_vqe
     return run_vqe()
 
-
-def _run_zne():
-    from zne import run_zne_job
-    return run_zne_job()
-
-
-
 def _cache_is_fresh():
     if not os.path.exists(CACHE_FILE):
         return False
@@ -52,35 +45,29 @@ def _save_cache(data: dict):
 
 
 
+def _run_zne():
+    print("[zne] process started")
+    from zne import run_zne
+    print("[zne] imports done")
+    result = run_zne()   # VQE is called inside here now
+    print("[zne] finished")
+    return result        # returns (vqe_energy, sherbrooke_energy, zne_energy)
+
+
 def compute_results() -> dict:
     with _cache_lock:
         if _cache_is_fresh():
             return _load_cache()
 
-        print("[timer] Starting parallel quantum jobs...")
+        print("[timer] Starting ZNE pipeline...")
         t0 = time.time()
 
-        with ProcessPoolExecutor(max_workers=2) as pool:
-            vqe_future = pool.submit(_run_vqe)
-            zne_future = pool.submit(_run_zne)
+        vqe_energy, sherbrooke_energy, zne_energy = _run_zne()
 
-            t1 = time.time()
-            vqe_energy = vqe_future.result()
-            print(f"[timer] VQE done: {time.time() - t1:.2f}s")
-
-            t2 = time.time()
-            zne_energy = zne_future.result()
-            print(f"[timer] ZNE done: {time.time() - t2:.2f}s")
-
-        print(f"[timer] Both jobs done: {time.time() - t0:.2f}s total")
-
-        t3 = time.time()
-        from zne import get_sherbrooke_energy
-        sherbrooke_energy = get_sherbrooke_energy()
+        print(f"[timer] Pipeline done: {time.time() - t0:.2f}s")
 
         from decision import predict_binding
         score = predict_binding(vqe_energy, zne_energy)
-        print(f"[timer] Decision done: {time.time() - t3:.2f}s")
 
         result = {
             "vqe_energy":        round(float(vqe_energy),        6),
