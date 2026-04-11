@@ -1,48 +1,88 @@
 import sys
 import os
+import json
+import time
+import threading
+import io
+import base64
+import warnings
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
-from flask import Flask, render_template, jsonify
-import warnings
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import base64
-import io
 warnings.filterwarnings("ignore")
+
+from flask import Flask, render_template, jsonify
+from concurrent.futures import ProcessPoolExecutor
 
 app = Flask(__name__)
 
-cached_results = None
+CACHE_FILE = "cached_results.json"
+CACHE_TTL  = 3600
+_cache_lock = threading.Lock()
 
 
-def get_results():
-    global cached_results
+def _run_vqe():
+    from zne import run_vqe
+    return run_vqe()
 
-    # Check if we have a cached file first
-    if os.path.exists("cached_results.json"):
-        with open("cached_results.json", "r") as f:
-            return json.load(f)
 
-    if cached_results is None:
-        from zne import run_zne
+def _run_zne():
+    from zne import run_zne_job
+    return run_zne_job()
+
+
+
+def _cache_is_fresh():
+    if not os.path.exists(CACHE_FILE):
+        return False
+    return (time.time() - os.path.getmtime(CACHE_FILE)) < CACHE_TTL
+
+
+def _load_cache():
+    with open(CACHE_FILE) as f:
+        return json.load(f)
+
+
+def _save_cache(data: dict):
+    with open(CACHE_FILE, "w") as f:
+        json.dump(data, f)
+
+
+
+def compute_results() -> dict:
+
+    with _cache_lock:
+        if _cache_is_fresh():
+            return _load_cache()
+
+        with ProcessPoolExecutor(max_workers=2) as pool:
+            vqe_future = pool.submit(_run_vqe)
+            zne_future = pool.submit(_run_zne)
+
+            vqe_energy       = vqe_future.result()   # blocks until done
+            zne_energy       = zne_future.result()
+
+        from zne import get_sherbrooke_energy
+        sherbrooke_energy = get_sherbrooke_energy()
+
         from decision import predict_binding
-        vqe_energy, sherbrooke_energy, zne_energy = run_zne()
         score = predict_binding(vqe_energy, zne_energy)
-        cached_results = {
-            "vqe_energy": round(float(vqe_energy), 6),
+
+        result = {
+            "vqe_energy":       round(float(vqe_energy),       6),
             "sherbrooke_energy": round(float(sherbrooke_energy), 6),
-            "zne_energy": round(float(zne_energy), 6),
-            "binding_score": round(float(score), 4),
-            "decision": "WORTH PURSUING" if score > 0.5 else "REJECT"
+            "zne_energy":       round(float(zne_energy),        6),
+            "binding_score":    round(float(score),             4),
+            "decision":         "WORTH PURSUING" if score > 0.5 else "REJECT",
+            "computed_at":      time.time(),
         }
-        with open("cached_results.json", "w") as f:
-            json.dump(cached_results, f)
+        _save_cache(result)
+        return result
 
-    return cached_results
-
-
-def generate_graph(vqe_energy, sherbrooke_energy, zne_energy):
+def generate_graph(vqe_energy: float, sherbrooke_energy: float, zne_energy: float) -> str:
     fig, ax = plt.subplots(figsize=(8, 4))
     fig.patch.set_facecolor('#0f0f1a')
     ax.set_facecolor('#0f0f1a')
@@ -54,57 +94,67 @@ def generate_graph(vqe_energy, sherbrooke_energy, zne_energy):
     bars = ax.bar(labels, values, color=colors, width=0.5)
     ax.set_ylabel('Energy (Hartree)', color='#e2e8f0')
     ax.tick_params(colors='#e2e8f0')
-    ax.spines['bottom'].set_color('#1a1a2e')
-    ax.spines['left'].set_color('#1a1a2e')
+    for spine in ('bottom', 'left'):
+        ax.spines[spine].set_color('#1a1a2e')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
     for bar, val in zip(bars, values):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() - 0.02,
-                f'{val:.4f}', ha='center', va='top', color='white', fontsize=10)
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() - 0.02,
+            f'{val:.4f}', ha='center', va='top', color='white', fontsize=10,
+        )
 
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', facecolor='#0f0f1a')
     buf.seek(0)
-    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-    plt.close()
-    return img_base64
+    img_b64 = base64.b64encode(buf.read()).decode()
+    plt.close(fig)
+    return img_b64
+
+def _prewarm():
+    print("[prewarm] Starting background quantum computation…")
+    try:
+        compute_results()
+        print("[prewarm] Cache populated.")
+    except Exception as exc:
+        print(f"[prewarm] Failed: {exc}")
+
+
+threading.Thread(target=_prewarm, daemon=True).start()
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
+
 @app.route("/run", methods=["POST"])
 def run_pipeline():
-    data = get_results()
+    data  = compute_results()
     graph = generate_graph(
-        data['vqe_energy'],
-        data['sherbrooke_energy'],
-        data['zne_energy']
+        data["vqe_energy"],
+        data["sherbrooke_energy"],
+        data["zne_energy"],
     )
     return jsonify({**data, "graph": graph})
 
+
 @app.route("/hardware", methods=["GET"])
 def hardware_results():
-    import json
     try:
-        with open("hardware_results.json", "r") as f:
-            data = json.load(f)
-        return jsonify(data)
-    except:
-        return jsonify({"error": "Hardware results not available yet"})
+        with open("hardware_results.json") as f:
+            return jsonify(json.load(f))
+    except FileNotFoundError:
+        return jsonify({"error": "Hardware results not available yet"}), 404
+
 
 @app.route("/hardware-run", methods=["POST"])
 def run_hardware_live():
-    import json
-    import os
-    import sys
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ''))
     from hardware import run_hardware
-    energy = run_hardware()
-    with open("hardware_results.json", "r") as f:
-        data = json.load(f)
-    return jsonify(data)
+    run_hardware()                           # writes hardware_results.json
+    with open("hardware_results.json") as f:
+        return jsonify(json.load(f))
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000, debug=False)
+    app.run(host="0.0.0.0", port=10000, debug=False, threaded=True)
