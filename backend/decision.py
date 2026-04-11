@@ -1,0 +1,41 @@
+from data import generate_training_data
+from backend.screener import model, device
+import torch
+
+def predict_binding(vqe_energy, zne_energy):
+    quantum_features = torch.tensor([[
+        vqe_energy,
+        0.54,
+        0.04,
+        0.0
+    ]], dtype=torch.float32).to(device)
+
+    from backend.protein import get_protein_features
+    protein_raw = torch.tensor(
+        get_protein_features(), dtype=torch.float32
+    ).unsqueeze(0).to(device)
+
+    X_quantum_train, X_protein_train, _ = generate_training_data()
+    X_quantum_train = X_quantum_train.to(device)
+    X_protein_train = X_protein_train.to(device)
+
+    # Normalize using training data stats
+    #Normalization formula:
+    #normalized = (value - mean) / std
+
+    quantum_features = (quantum_features - X_quantum_train.mean(dim=0)) / (X_quantum_train.std(dim=0) + 1e-8)
+    protein_features = (protein_raw - X_protein_train.mean(dim=0)) / (X_protein_train.std(dim=0) + 1e-8)
+
+    model.eval()
+    with torch.no_grad():
+        score = model(quantum_features, protein_features).item()
+
+    print(f"Binding Score: {score:.4f}")
+    if score > 0.5:
+        print("Decision: Worth pursuing ")
+    else:
+        print("Decision: Reject ")
+    return score
+
+def the_decision(vqe_energy, zne_energy):
+    return predict_binding(vqe_energy, zne_energy)
