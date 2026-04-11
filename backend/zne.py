@@ -58,8 +58,3 @@ def run_zne():
     zne_energy = np.polyval(coeffs, 0)
 
     return vqe_energy, sherbrooke_energy, zne_energy
-
-
-def get_sherbrooke_energy():
-    _, sherbrooke_energy, _ = run_zne()
-    return sherbrooke_energy
