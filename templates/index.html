@@ -261,5 +261,10 @@
             document.querySelectorAll('.hero .reveal').forEach(el => el.classList.add('visible'));
         });
     </script>
+<button onclick="runHardware()" class="run-btn" style="margin-top:2rem">Run Live on IBM Kingston</button>
+<div id="hardwareLoading" class="loading hidden">
+    <div class="spinner"></div>
+    <p>Submitting job to IBM Kingston quantum processor...</p>
+</div>
 </body>
 </html>

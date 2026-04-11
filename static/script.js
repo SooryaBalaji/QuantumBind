@@ -44,3 +44,12 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+async function runHardware() {
+    const loading = document.getElementById('hardwareLoading');
+    loading.classList.remove('hidden');
+    const response = await fetch('/hardware-run', { method: 'POST' });
+    const data = await response.json();
+    document.getElementById('hwEnergy').textContent = data.hardware_energy.toFixed(4);
+    loading.classList.add('hidden');
+}
