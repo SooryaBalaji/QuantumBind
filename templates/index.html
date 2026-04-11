@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumBind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <span class="logo">QuantumBind</span>
+            <span class="nav-tag">BACE1 Inhibitor Screening</span>
+        </nav>
+
+        <div class="hero">
+            <div class="hero-label">Quantum-Classical Drug Discovery</div>
+            <h1>Screening BACE1 Inhibitors<br>for <span>Alzheimer's</span> Disease</h1>
+            <p>Using Variational Quantum Eigensolver on IBM Quantum hardware combined with AlphaFold protein structure to predict drug binding affinity.</p>
+            <button id="runBtn" onclick="runPipeline()">Run Quantum Pipeline</button>
+        </div>
+
+        <div class="pipeline">
+            <div class="step">
+                <div class="step-number">01</div>
+                <div class="step-title">VQE</div>
+                <div class="step-desc">Ground state energy via quantum circuit on IBM Sherbrooke</div>
+            </div>
+            <div class="step">
+                <div class="step-number">02</div>
+                <div class="step-title">ZNE</div>
+                <div class="step-desc">Zero noise extrapolation for hardware error mitigation</div>
+            </div>
+            <div class="step">
+                <div class="step-number">03</div>
+                <div class="step-title">AlphaFold</div>
+                <div class="step-desc">BACE1 protein structure and binding pocket features</div>
+            </div>
+            <div class="step">
+                <div class="step-number">04</div>
+                <div class="step-title">Screener</div>
+                <div class="step-desc">Hybrid quantum-classical neural network binding prediction</div>
+            </div>
+        </div>
+
+        <div id="hardwareResults" class="results">
+            <h2>IBM Kingston — Real Quantum Hardware</h2>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-label">Hardware Energy</div>
+                    <div class="metric-value">-0.8079</div>
+                    <div class="metric-sub">IBM Kingston (Hartree)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Job ID</div>
+                    <div class="metric-value" style="font-size: 0.75rem; padding-top: 0.5rem">d7didf15a5qc73dpt9f0</div>
+                    <div class="metric-sub">Verify on IBM Quantum Platform</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Backend</div>
+                    <div class="metric-value">ibm_kingston</div>
+                    <div class="metric-sub">127-qubit superconducting QPU</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Running quantum pipeline on IBM Sherbrooke noise model...</p>
+        </div>
+
+        <div id="results" class="results hidden">
+            <h2>Results — Verubecestat vs BACE1</h2>
+
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-label">VQE Energy</div>
+                    <div class="metric-value" id="vqeEnergy">—</div>
+                    <div class="metric-sub">Ideal (Hartree)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Sherbrooke Energy</div>
+                    <div class="metric-value" id="sherbrookeEnergy">—</div>
+                    <div class="metric-sub">Noisy hardware (Hartree)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">ZNE Energy</div>
+                    <div class="metric-value" id="zneEnergy">—</div>
+                    <div class="metric-sub">Noise mitigated (Hartree)</div>
+                </div>
+            </div>
+
+            <div class="binding">
+                <div class="binding-score">
+                    <div class="binding-label">Binding Score</div>
+                    <div class="binding-value" id="bindingScore">—</div>
+                </div>
+                <div class="decision" id="decision">—</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
