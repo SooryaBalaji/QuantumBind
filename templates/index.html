@@ -7,13 +7,22 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><ellipse cx='50' cy='50' rx='45' ry='18' fill='none' stroke='%236366f1' stroke-width='3'/><ellipse cx='50' cy='50' rx='45' ry='18' fill='none' stroke='%236366f1' stroke-width='3' transform='rotate(60 50 50)'/><ellipse cx='50' cy='50' rx='45' ry='18' fill='none' stroke='%236366f1' stroke-width='3' transform='rotate(120 50 50)'/><circle cx='50' cy='50' r='6' fill='%236366f1'/></svg>">
 </head>
 <body>
 
     <div class="grain"></div>
 
     <nav>
-        <span class="logo">QuantumBind</span>
+        <span class="logo">
+            <svg width="20" height="20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="margin-right:8px;vertical-align:middle">
+                <ellipse cx="50" cy="50" rx="45" ry="18" fill="none" stroke="#6366f1" stroke-width="4"/>
+                <ellipse cx="50" cy="50" rx="45" ry="18" fill="none" stroke="#6366f1" stroke-width="4" transform="rotate(60 50 50)"/>
+                <ellipse cx="50" cy="50" rx="45" ry="18" fill="none" stroke="#6366f1" stroke-width="4" transform="rotate(120 50 50)"/>
+                <circle cx="50" cy="50" r="6" fill="#6366f1"/>
+            </svg>
+            QuantumBind
+        </span>
         <div class="nav-links">
             <a href="#pipeline">Pipeline</a>
             <a href="#hardware">Hardware</a>
@@ -204,7 +213,15 @@
     </section>
 
     <footer>
-        <span>QuantumBind</span>
+        <span style="display:flex;align-items:center;gap:8px">
+            <svg width="16" height="16" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="50" rx="45" ry="18" fill="none" stroke="#6366f1" stroke-width="4"/>
+                <ellipse cx="50" cy="50" rx="45" ry="18" fill="none" stroke="#6366f1" stroke-width="4" transform="rotate(60 50 50)"/>
+                <ellipse cx="50" cy="50" rx="45" ry="18" fill="none" stroke="#6366f1" stroke-width="4" transform="rotate(120 50 50)"/>
+                <circle cx="50" cy="50" r="6" fill="#6366f1"/>
+            </svg>
+            QuantumBind
+        </span>
         <span>IBM Kingston · AlphaFold · ChEMBL · PennyLane</span>
     </footer>
 
