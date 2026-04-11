@@ -15,24 +15,30 @@ app = Flask(__name__)
 
 cached_results = None
 
+
 def get_results():
     global cached_results
+
+    # Check if we have a cached file first
+    if os.path.exists("cached_results.json"):
+        with open("cached_results.json", "r") as f:
+            return json.load(f)
+
     if cached_results is None:
-        print("Running quantum pipeline for first time...")
         from zne import run_zne
         from decision import predict_binding
-
         vqe_energy, sherbrooke_energy, zne_energy = run_zne()
         score = predict_binding(vqe_energy, zne_energy)
-
         cached_results = {
             "vqe_energy": round(float(vqe_energy), 6),
             "sherbrooke_energy": round(float(sherbrooke_energy), 6),
             "zne_energy": round(float(zne_energy), 6),
             "binding_score": round(float(score), 4),
-            "decision": "Worth Pursuing" if score > 0.5 else "Reject"
+            "decision": "WORTH PURSUING" if score > 0.5 else "REJECT"
         }
-        print("Pipeline complete. Results cached.")
+        with open("cached_results.json", "w") as f:
+            json.dump(cached_results, f)
+
     return cached_results
 
 
