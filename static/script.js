@@ -67,5 +67,8 @@ async function runHardware() {
 }
 
 const graph = document.getElementById('energyGraph');
-graph.src = 'data:image/png;base64,' + data.graph;
-graph.style.display = 'block';
+if (data.graph) {
+    const graph = document.getElementById('energyGraph');
+    graph.src = 'data:image/png;base64,' + data.graph;
+    graph.style.display = 'block';
+}graph.style.display = 'block';
