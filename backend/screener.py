@@ -13,7 +13,7 @@ torch.manual_seed(42)
 device = torch.device("cpu") #cpu instead of gpu (cuda) since quantum layers only work on cpu
 
 n_qubits = 4
-dev = qml.device("lightning.qubit", wires=n_qubits)
+dev = qml.device("default.qubit", wires=n_qubits)
 
 @qml.qnode(dev, interface="torch")
 def quantum_layer(inputs, weights):
