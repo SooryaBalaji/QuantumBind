@@ -6,7 +6,7 @@ from pennylane import numpy as np
 def run_vqe():
    H, n_qubits = build_molecule()
    n_electrons = 2
-   dev = qml.device("default.qubit", wires=n_qubits)
+   dev = qml.device("lightning.qubit", wires=n_qubits)
 
 
    hf_state = qml.qchem.hf_state(n_electrons, n_qubits)
@@ -26,7 +26,7 @@ def run_vqe():
        return qml.expval(H)
 
 
-   for step in range(5):
+   for step in range(50):
        params, energy = optimizer.step_and_cost(circuit, params)
 
 
