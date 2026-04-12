@@ -191,9 +191,27 @@ def hardware_results():
 @app.route("/hardware-run", methods=["POST"])
 def run_hardware_live():
     from hardware import run_hardware
-    run_hardware()
-    with open("hardware_results.json") as f:
-        return jsonify(json.load(f))
+    import json
+    import os
+    from flask import request
+
+    data = request.json or {}
+    user_api_key = data.get('api_key')
+
+    if not user_api_key or user_api_key.strip() == "":
+        if os.path.exists("cached_results.json"):
+            with open("cached_results.json") as f:
+                return jsonify(json.load(f))
+        return jsonify({"error": "No API key provided and no cache found"}), 400
+
+    try:
+        run_hardware(api_token=user_api_key)
+
+        with open("hardware_results.json") as f:
+            return jsonify(json.load(f))
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=False, threaded=True)
