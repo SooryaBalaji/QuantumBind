@@ -1,53 +1,87 @@
-async function runHardwarePipeline() {
-    const runBtn = document.getElementById('run-btn');
-    const apiField = document.getElementById('api_key');
-    const resultsContainer = document.getElementById('results-container');
-    const scoreDisplay = document.getElementById('score-display');
-    const verdictBadge = document.getElementById('verdict-badge');
 
-    const apiKey = apiField.value.trim();
+async function runPipeline() {
+    const btn = document.getElementById('runBtn');
+    const loading = document.getElementById('loading');
+    const results = document.getElementById('results');
 
-    runBtn.disabled = true;
-    runBtn.innerText = "Running Quantum VQE...";
-    resultsContainer.style.display = "none";
-
-    console.log("Starting Pipeline...");
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+    btn.classList.remove('success-state');
+    loading.classList.remove('hidden');
+    results.classList.add('hidden');
 
     try {
-        const response = await fetch('/hardware-run', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ api_key: apiKey })
-        });
+        const response = await fetch('/run', { method: 'POST' });
+
+        if (!response.ok) {
+            throw new Error(`Server Error: ${response.status}`);
+        }
 
         const data = await response.json();
 
-        if (response.ok) {
-            scoreDisplay.innerText = data.binding_score || "0.9009";
-            verdictBadge.innerText = data.verdict || "Worth Pursuing";
+        document.getElementById('vqeEnergy').textContent = (data.vqe_energy || 0).toFixed(4);
+        document.getElementById('sherbrookeEnergy').textContent = (data.sherbrooke_energy || 0).toFixed(4);
+        document.getElementById('zneEnergy').textContent = (data.zne_energy || 0).toFixed(4);
+        document.getElementById('bindingScore').textContent = (data.binding_score || 0).toFixed(4);
 
-            resultsContainer.style.display = "block";
+        const decisionEl = document.getElementById('decision');
+        const score = data.binding_score || 0;
 
-            if (!apiKey) {
-                console.log("No key provided. Using cached demo data.");
-            }
-        } else {
-            alert("Error: " + (data.message || data.error || "Server connection failed"));
+        decisionEl.textContent = data.decision || "N/A";
+        decisionEl.className = 'decision ' + (score > 0.5 ? 'pursue' : 'reject');
+
+        if (data.graph) {
+            const graphImg = document.getElementById('energyGraph');
+            graphImg.src = 'data:image/png;base64,' + data.graph;
+            graphImg.style.display = 'block';
         }
 
-    } catch (error) {
-        console.error("Pipeline Error:", error);
-        alert("Critical Error: Could not connect to the backend server.");
-    } finally {
-        runBtn.disabled = false;
-        runBtn.innerText = "Execute Quantum Pipeline";
+        loading.classList.add('hidden');
+        results.classList.remove('hidden');
+
+        btn.textContent = 'FINISHED';
+        btn.classList.add('success-state');
+        btn.disabled = false;
+
+    } catch (err) {
+        console.error("Pipeline failed:", err);
+        btn.textContent = 'Server Error - Check Python Console';
+        btn.disabled = false;
+        loading.classList.add('hidden');
     }
 }
 
-document.getElementById('api_key').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        runHardwarePipeline();
+async function runHardware() {
+    const loading = document.getElementById('hardwareLoading');
+    const hwEnergy = document.getElementById('hwEnergy');
+    const hwJobId = document.getElementById('hwJobId');
+
+    loading.classList.remove('hidden');
+
+    try {
+        const response = await fetch('/hardware-run', { method: 'POST' });
+        if (!response.ok) throw new Error("Hardware endpoint failed");
+
+        const data = await response.json();
+
+        hwEnergy.textContent = (data.hardware_energy || 0).toFixed(4);
+        hwJobId.textContent = data.job_id || "None";
+
+    } catch (err) {
+        console.error("Hardware run failed:", err);
+    } finally {
+        loading.classList.add('hidden');
     }
-});
+}
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+            setTimeout(() => {
+                entry.target.classList.add('visible');
+            }, index * 100);
+        }
+    });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
