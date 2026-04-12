@@ -81,7 +81,6 @@ def _pl_hamiltonian_to_qibo(H, n_qubits):
         term = coeff
         for sub in sub_ops:
             name = sub.__class__.__name__
-            # Clean up names like 'PauliX' or just 'X'
             clean_name = name.replace('Pauli', '')
             sym_cls = symbol_map.get(f"Pauli{clean_name}") or symbol_map.get(clean_name)
 
