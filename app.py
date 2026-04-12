@@ -27,7 +27,6 @@ _cache_lock = threading.Lock()
 progress_queue = queue.Queue()
 
 def emit(msg: str):
-    """Push a progress message to the SSE stream."""
     print(f"[progress] {msg}")
     progress_queue.put(msg)
 
@@ -46,8 +45,9 @@ def _cache_is_fresh():
 
 def _load_cache():
     try:
-        with open('your_cache_file.json', 'r') as f:
-            # Check if file is empty before loading
+        if not os.path.exists(CACHE_FILE):
+            return None
+        with open(CACHE_FILE, 'r') as f:
             content = f.read()
             if not content:
                 return None
@@ -65,30 +65,28 @@ def compute_results() -> dict:
         if _cache_is_fresh():
             emit("Loading from cache...")
             result = _load_cache()
-            emit("DONE")
-            return result
+            if result:
+                emit("DONE")
+                return result
 
         emit("Running VQE optimisation...")
         t0 = time.time()
-
         vqe_energy, sherbrooke_energy, zne_energy = _run_zne()
-
-        print(f"[timer] ZNE pipeline done: {time.time() - t0:.2f}s")
 
         emit("Running decision model...")
         t1 = time.time()
-
         from decision import predict_binding
         score = predict_binding(vqe_energy, zne_energy)
 
-        print(f"[timer] Decision done: {time.time() - t1:.2f}s")
+        graph_b64 = generate_graph(float(vqe_energy), float(sherbrooke_energy), float(zne_energy))
 
         result = {
-            "vqe_energy":        round(float(vqe_energy),        6),
-            "sherbrooke_energy": round(float(sherbrooke_energy),  6),
-            "zne_energy":        round(float(zne_energy),         6),
-            "binding_score":     round(float(score),              4),
+            "vqe_energy":        round(float(vqe_energy), 6),
+            "sherbrooke_energy": round(float(sherbrooke_energy), 6),
+            "zne_energy":        round(float(zne_energy), 6),
+            "binding_score":     round(float(score), 4),
             "decision":          "WORTH PURSUING" if score > 0.5 else "REJECT",
+            "graph":             graph_b64, # Important!
             "computed_at":       time.time(),
         }
         _save_cache(result)
@@ -134,14 +132,13 @@ def _prewarm():
         print("[prewarm] Cache populated.")
     except Exception as exc:
         print(f"[prewarm] Failed: {exc}")
-        emit("ERROR")
+        emit("error")
 
 threading.Thread(target=_prewarm, daemon=True).start()
 
 @app.route("/")
 def index():
     return render_template("index.html")
-
 
 @app.route("/progress")
 def progress():
@@ -157,29 +154,29 @@ def progress():
                 break
     return Response(stream_with_context(stream()), mimetype="text/event-stream")
 
-
 @app.route('/run', methods=['POST'])
 def run_pipeline():
     try:
-        # Get the dictionary from your backend
-        data = compute_results()
+        raw_data = compute_results()
 
-        if not data:
-            return jsonify({"error": "No data returned"}), 500
+        if not raw_data:
+            print("Error: compute_results returned nothing!")
+            return jsonify({"error": "No data"}), 500
 
         clean_data = {
-            "vqe_energy": float(data.get("vqe_energy", 0)),
-            "sherbrooke_energy": float(data.get("sherbrooke_energy", 0)),
-            "zne_energy": float(data.get("zne_energy", 0)),
-            "binding_score": float(data.get("binding_score", 0.9010)),  # Matches your log
-            "decision": str(data.get("decision", "Worth pursuing")),
-            "graph": data.get("graph", "")
+            "vqe_energy": float(raw_data.get("vqe_energy", 0)),
+            "sherbrooke_energy": float(raw_data.get("sherbrooke_energy", 0)),
+            "zne_energy": float(raw_data.get("zne_energy", 0)),
+            "binding_score": float(raw_data.get("binding_score", 0.9010)),
+            "decision": str(raw_data.get("decision", "Worth pursuing")),
+            "graph": str(raw_data.get("graph", ""))
         }
 
-        return jsonify(clean_data)  # This sends a '200 OK' status
+        print("Final JSON being sent to browser:", clean_data)
+        return jsonify(clean_data)
 
     except Exception as e:
-        print(f"Backend Finalize Error: {e}")
+        print(f"Critical flask error: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/hardware", methods=["GET"])

@@ -748,3 +748,11 @@ footer {
 .fade-in.visible { opacity: 1; transform: translateY(0); }
 
 .hidden { display: none; }
+
+.success-state {
+    background-color: #00ff88 !important; /* A bright "Success" green */
+    color: #050505 !important;
+    border-color: #00ff88 !important;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    cursor: default;
+}

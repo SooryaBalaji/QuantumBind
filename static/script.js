@@ -1,37 +1,55 @@
 
-
 async function runPipeline() {
     const btn = document.getElementById('runBtn');
     const loading = document.getElementById('loading');
     const results = document.getElementById('results');
 
+    // 1. Reset UI State
     btn.disabled = true;
     btn.textContent = 'Running...';
+    btn.classList.remove('success-state');
+    loading.classList.remove('hidden');
+    results.classList.add('hidden');
 
     try {
         const response = await fetch('/run', { method: 'POST' });
 
-        if (!response.ok) throw new Error("Server Error");
+        if (!response.ok) {
+            throw new Error(`Server Error: ${response.status}`);
+        }
 
         const data = await response.json();
 
-        // 1. Update the UI with your successful 0.9010 score
-        document.getElementById('vqeEnergy').textContent = data.vqe_energy.toFixed(4);
-        document.getElementById('bindingScore').textContent = data.binding_score.toFixed(4);
-        document.getElementById('decision').textContent = data.decision;
+        document.getElementById('vqeEnergy').textContent = (data.vqe_energy || 0).toFixed(4);
+        document.getElementById('sherbrookeEnergy').textContent = (data.sherbrooke_energy || 0).toFixed(4);
+        document.getElementById('zneEnergy').textContent = (data.zne_energy || 0).toFixed(4);
+        document.getElementById('bindingScore').textContent = (data.binding_score || 0).toFixed(4);
 
-        // 2. Reveal the results and hide the spinner
+        const decisionEl = document.getElementById('decision');
+        const score = data.binding_score || 0;
+
+        decisionEl.textContent = data.decision || "N/A";
+        decisionEl.className = 'decision ' + (score > 0.5 ? 'pursue' : 'reject');
+
+        if (data.graph) {
+            const graphImg = document.getElementById('energyGraph');
+            graphImg.src = 'data:image/png;base64,' + data.graph;
+            graphImg.style.display = 'block';
+        }
+
         loading.classList.add('hidden');
         results.classList.remove('hidden');
 
-        // 3. Change button to "FINISHED"
         btn.textContent = 'FINISHED';
-        btn.classList.add('success-state'); // Optional: add a green class in CSS
+        btn.classList.add('success-state');
+        btn.disabled = false;
 
     } catch (err) {
-        console.error(err);
+        console.error("Pipeline failed:", err);
+        // Display the error on the button so the user knows why it stopped
         btn.textContent = 'Server Error - Check Python Console';
         btn.disabled = false;
+        loading.classList.add('hidden');
     }
 }
 
@@ -44,8 +62,7 @@ async function runHardware() {
 
     try {
         const response = await fetch('/hardware-run', { method: 'POST' });
-
-        if (!response.ok) throw new Error("Hardware fetch failed");
+        if (!response.ok) throw new Error("Hardware endpoint failed");
 
         const data = await response.json();
 
