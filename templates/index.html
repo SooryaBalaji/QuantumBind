@@ -3,239 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuantumBind Hybrid BACE1 Screening</title>
+    <title>QuantumBind | BACE1 Drug Discovery</title>
     <style>
-        :root {
-            --bg-color: #0a0a0c;
-            --card-bg: #16161a;
-            --accent-blue: #00d4ff;
-            --accent-purple: #7000ff;
-            --text-main: #e0e0e0;
-            --text-dim: #888;
-        }
-
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: #0d0d0f;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
             margin: 0;
         }
 
-        .container {
-            width: 90%;
-            max-width: 500px;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #2d2d33;
+        .main-card {
+            background-color: #151518;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            width: 450px;
+            text-align: center;
+            border: 1px solid #25252a;
         }
 
         h1 {
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-weight: 600;
         }
 
-        p.subtitle {
-            color: var(--text-dim);
+        .subtitle {
+            color: #888;
             font-size: 0.9rem;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
-        .api-container {
-            background: rgba(255, 255, 255, 0.03);
+        /* The specific API section you wanted */
+        .hardware-config {
+            text-align: left;
+            margin-bottom: 25px;
             padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
             border: 1px solid #333;
         }
 
         label {
+            color: #00d4ff;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             display: block;
-            font-size: 0.85rem;
             margin-bottom: 8px;
-            color: var(--accent-blue);
-            font-weight: 600;
         }
 
         input[type="password"] {
             width: 100%;
-            box-sizing: border-box;
-            padding: 12px;
             background: #000;
             border: 1px solid #444;
-            border-radius: 6px;
-            color: white;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-sizing: border-box;
             font-family: monospace;
-            outline: none;
         }
 
-        input[type="password"]:focus {
-            border-color: var(--accent-blue);
-        }
-
-        .help-text {
-            font-size: 0.75rem;
+        .demo-note {
+            font-size: 0.7rem;
             color: #666;
-            margin-top: 10px;
-            line-height: 1.4;
+            margin-top: 8px;
         }
 
         button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(45deg, #00d4ff, #0055ff);
+            background: #007bff;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 10px;
             font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
+            width: 100%;
+            transition: 0.3s;
         }
 
         button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+            background: #0056b3;
         }
 
-        button:disabled {
-            background: #333;
-            cursor: not-allowed;
-        }
-
-        #loading-status {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.9rem;
-            color: var(--accent-blue);
-        }
-
-        .results-area {
-            display: none;
-            margin-top: 25px;
+        #results-container {
+            margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px solid #333;
+            border-top: 1px solid #25252a;
+            display: none;
         }
 
-        .score-card {
-            background: #000;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid var(--accent-blue);
+        .score-box {
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            padding: 20px;
+            display: inline-block;
+            width: 80%;
         }
 
         .score-val {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             display: block;
         }
 
-        .verdict-badge {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 4px 12px;
-            border-radius: 20px;
+        .badge {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            padding: 5px 15px;
+            border-radius: 15px;
             font-size: 0.8rem;
-            background: rgba(0, 212, 255, 0.2);
-            color: var(--accent-blue);
-        }
-
-        /* Simple Spinner */
-        .spinner {
+            margin-top: 10px;
             display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid rgba(0, 212, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--accent-blue);
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 8px;
         }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>QuantumBind</h1>
-    <p class="subtitle">Hybrid VQE & Neural Drug Screener for BACE1</p>
+    <div class="main-card">
+        <h1>QuantumBind</h1>
+        <p class="subtitle">Hybrid VQE & Neural Drug Screener for BACE1</p>
 
-    <div class="api-container">
-        <label for="api_key">IBM Quantum API Token</label>
-        <input type="password" id="api_key" placeholder="Paste your token here...">
-        <p class="help-text">
-            No token? Leave blank to use <strong>Cached Hardware Results</strong>.
-            Get a token at <a href="https://quantum.ibm.com/" target="_blank" style="color:var(--accent-blue)">quantum.ibm.com</a>
-        </p>
-    </div>
+        <div class="hardware-config">
+            <label for="api_key">IBM Quantum API Token</label>
+            <input type="password" id="api_key" placeholder="Paste your token here...">
+            <p class="demo-note">Leave blank to use <b>Demo Mode</b> (Cached Results).</p>
+        </div>
 
-    <button id="run-btn" onclick="runHardwarePipeline()">Execute Quantum Pipeline</button>
+        <button id="run-btn" onclick="runHardwarePipeline()">Execute Quantum Pipeline</button>
 
-    <div id="loading-status">
-        <div class="spinner"></div> Initializing 127-qubit IBM Kingston processor...
-    </div>
-
-    <div id="results" class="results-area">
-        <div class="score-card">
-            <span style="font-size: 0.8rem; color: #888;">Binding Affinity Score</span>
-            <span id="score-val" class="score-val">0.0000</span>
-            <div id="verdict" class="verdict-badge">Processing...</div>
+        <div id="results-container">
+            <div class="score-box">
+                <span style="color: #888; font-size: 0.8rem;">Binding Affinity Score</span>
+                <span id="score-display" class="score-val">0.9009</span>
+                <div id="verdict-badge" class="badge">Worth Pursuing</div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    async function runHardwarePipeline() {
-        const apiKey = document.getElementById('api_key').value.trim();
-        const btn = document.getElementById('run-btn');
-        const loader = document.getElementById('loading-status');
-        const resultsArea = document.getElementById('results');
-
-        // Reset UI
-        btn.disabled = true;
-        btn.innerText = "Running VQE...";
-        loader.style.display = "block";
-        resultsArea.style.display = "none";
-
-        try {
-            const response = await fetch('/hardware-run', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ api_key: apiKey })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                // Update results
-                document.getElementById('score-val').innerText = data.binding_score || "0.9009";
-                document.getElementById('verdict').innerText = data.verdict || "Worth Pursuing";
-                resultsArea.style.display = "block";
-
-                if (!apiKey) alert("Showing cached data from previous hardware run.");
-            } else {
-                alert("Error: " + (data.message || "Failed to connect to IBM Quantum"));
-            }
-        } catch (err) {
-            alert("Connection error. Check if Flask is running on Render.");
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Execute Quantum Pipeline";
-            loader.style.display = "none";
-        }
-    }
-</script>
-
+    <script src="/static/script.js"></script>
 </body>
 </html>
