@@ -4,7 +4,6 @@ async function runPipeline() {
     const loading = document.getElementById('loading');
     const results = document.getElementById('results');
 
-    // 1. Reset UI State
     btn.disabled = true;
     btn.textContent = 'Running...';
     btn.classList.remove('success-state');
@@ -46,7 +45,6 @@ async function runPipeline() {
 
     } catch (err) {
         console.error("Pipeline failed:", err);
-        // Display the error on the button so the user knows why it stopped
         btn.textContent = 'Server Error - Check Python Console';
         btn.disabled = false;
         loading.classList.add('hidden');

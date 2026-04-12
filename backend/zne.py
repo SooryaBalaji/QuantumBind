@@ -56,19 +56,15 @@ def _pl_hamiltonian_to_qibo(H, n_qubits):
     symbol_map = {'PauliX': X, 'PauliY': Y, 'PauliZ': Z}
     terms = []
 
-    # Handle modern PennyLane 'Sum' objects
     if isinstance(H, qml.ops.Sum):
         operands = H.operands
-    # Fallback for older Hamiltonian objects
     elif hasattr(H, 'terms'):
         coeffs, ops = H.terms()
-        # Create a list of scaled operators to match the loop logic
         operands = [qml.s_prod(c, o) for c, o in zip(coeffs, ops)]
     else:
         operands = [H]
 
     for op in operands:
-        # Extract coefficient and the base operator
         if isinstance(op, qml.ops.SProd):
             coeff = float(op.scalar)
             base_op = op.base
@@ -76,12 +72,10 @@ def _pl_hamiltonian_to_qibo(H, n_qubits):
             coeff = 1.0
             base_op = op
 
-        # Handle Identity
         if isinstance(base_op, (qml.Identity, qml.I)):
             terms.append(coeff)
             continue
 
-        # Handle multi-qubit terms (Prod)
         sub_ops = base_op.operands if isinstance(base_op, qml.ops.Prod) else [base_op]
 
         term = coeff

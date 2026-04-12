@@ -686,7 +686,6 @@ nav {
 .decision.pursue { color: var(--success); }
 .decision.reject { color: var(--danger); }
 
-/* LOADING */
 .loading {
     display: flex;
     align-items: center;
@@ -713,7 +712,6 @@ nav {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* FOOTER */
 footer {
     padding: 2.5rem 5rem;
     border-top: 1px solid var(--border);
@@ -726,7 +724,6 @@ footer {
     letter-spacing: 0.08em;
 }
 
-/* REVEAL ANIMATIONS */
 .reveal {
     opacity: 0;
     transform: translateY(18px);

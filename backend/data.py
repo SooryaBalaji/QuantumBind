@@ -5,7 +5,6 @@ import os
 
 CHEMBL_CACHE = "chembl_cache.json"
 
-# Fallback data in case ChEMBL is down or import fails
 FALLBACK_BINDERS = [
     10, 25, 50, 80, 100, 150, 200, 300, 450, 600,
     12, 34, 67, 95, 120, 180, 220, 350, 480, 550,
@@ -21,7 +20,6 @@ FALLBACK_NON_BINDERS = [
     1600, 1800, 2700, 4800, 6800, 9500, 1100, 2900, 3600, 5200,
 ]
 
-# Wrap the import itself — this is what was crashing
 try:
     from chembl_webresource_client.new_client import new_client
     CHEMBL_AVAILABLE = True
@@ -31,14 +29,12 @@ except Exception as e:
 
 
 def get_chembl_data():
-    # Return cached data if it exists
     if os.path.exists(CHEMBL_CACHE):
         print("[chembl] Loading from cache...")
         with open(CHEMBL_CACHE) as f:
             data = json.load(f)
         return data["binders"], data["non_binders"]
 
-    # Try live API only if import succeeded
     if CHEMBL_AVAILABLE:
         try:
             print("[chembl] Fetching from ChEMBL API...")
