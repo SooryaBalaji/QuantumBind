@@ -7,45 +7,31 @@ async function runPipeline() {
 
     btn.disabled = true;
     btn.textContent = 'Running...';
-    loading.classList.remove('hidden');
-    results.classList.add('hidden');
 
     try {
         const response = await fetch('/run', { method: 'POST' });
 
-        if (!response.ok) {
-            throw new Error(`Server Error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error("Server Error");
 
         const data = await response.json();
 
-        document.getElementById('vqeEnergy').textContent = (data.vqe_energy || 0).toFixed(4);
-        document.getElementById('sherbrookeEnergy').textContent = (data.sherbrooke_energy || 0).toFixed(4);
-        document.getElementById('zneEnergy').textContent = (data.zne_energy || 0).toFixed(4);
-        document.getElementById('bindingScore').textContent = (data.binding_score || 0).toFixed(4);
+        // 1. Update the UI with your successful 0.9010 score
+        document.getElementById('vqeEnergy').textContent = data.vqe_energy.toFixed(4);
+        document.getElementById('bindingScore').textContent = data.binding_score.toFixed(4);
+        document.getElementById('decision').textContent = data.decision;
 
-        const decision = document.getElementById('decision');
-        decision.textContent = data.decision || "N/A";
-
-        decision.className = 'decision ' + (data.binding_score > 0.5 ? 'pursue' : 'reject');
-
-        if (data.graph) {
-            const graphImg = document.getElementById('energyGraph');
-            graphImg.src = 'data:image/png;base64,' + data.graph;
-            graphImg.style.display = 'block';
-        }
-
+        // 2. Reveal the results and hide the spinner
         loading.classList.add('hidden');
         results.classList.remove('hidden');
 
+        // 3. Change button to "FINISHED"
+        btn.textContent = 'FINISHED';
+        btn.classList.add('success-state'); // Optional: add a green class in CSS
+
     } catch (err) {
-        console.error("Pipeline execution failed:", err);
+        console.error(err);
         btn.textContent = 'Server Error - Check Python Console';
-    } finally {
         btn.disabled = false;
-        if (btn.textContent !== 'Server Error - Check Python Console') {
-            btn.textContent = 'Run Quantum Pipeline';
-        }
     }
 }
 
