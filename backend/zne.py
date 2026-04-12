@@ -10,8 +10,7 @@ from qibo import gates as qgates
 from qibo.noise import NoiseModel as QiboNoiseModel
 from qibo.noise import PhaseDampingError
 
-# Use GPU via cupy
-qibo.set_backend("qibojit", platform="cupy")
+qibo.set_backend("numpy")
 
 
 def _pl_to_qibo(n_qubits, params, s_wires, d_wires, hf_state, density_matrix=True):
@@ -52,21 +51,46 @@ def _pl_to_qibo(n_qubits, params, s_wires, d_wires, hf_state, density_matrix=Tru
 def _pl_hamiltonian_to_qibo(H, n_qubits):
     from qibo.hamiltonians import SymbolicHamiltonian
     from qibo.symbols import X, Y, Z
+    import pennylane as qml
 
     symbol_map = {'PauliX': X, 'PauliY': Y, 'PauliZ': Z}
     terms = []
 
-    for coeff, op in zip(H.coeffs, H.ops):
-        name = op.__class__.__name__
+    # Handle modern PennyLane 'Sum' objects
+    if isinstance(H, qml.ops.Sum):
+        operands = H.operands
+    # Fallback for older Hamiltonian objects
+    elif hasattr(H, 'terms'):
+        coeffs, ops = H.terms()
+        # Create a list of scaled operators to match the loop logic
+        operands = [qml.s_prod(c, o) for c, o in zip(coeffs, ops)]
+    else:
+        operands = [H]
 
-        if name in ('Identity', 'I'):
-            terms.append(float(coeff))
+    for op in operands:
+        # Extract coefficient and the base operator
+        if isinstance(op, qml.ops.SProd):
+            coeff = float(op.scalar)
+            base_op = op.base
+        else:
+            coeff = 1.0
+            base_op = op
+
+        # Handle Identity
+        if isinstance(base_op, (qml.Identity, qml.I)):
+            terms.append(coeff)
             continue
 
-        sub_ops = op.operands if hasattr(op, 'operands') else [op]
-        term = float(coeff)
+        # Handle multi-qubit terms (Prod)
+        sub_ops = base_op.operands if isinstance(base_op, qml.ops.Prod) else [base_op]
+
+        term = coeff
         for sub in sub_ops:
-            sym_cls = symbol_map.get(sub.__class__.__name__)
+            name = sub.__class__.__name__
+            # Clean up names like 'PauliX' or just 'X'
+            clean_name = name.replace('Pauli', '')
+            sym_cls = symbol_map.get(f"Pauli{clean_name}") or symbol_map.get(clean_name)
+
             if sym_cls:
                 term = term * sym_cls(sub.wires[0])
 

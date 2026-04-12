@@ -176,12 +176,48 @@
             <h2 class="section-h2">Screen Verubecestat<br>against <em>BACE1</em> now.</h2>
             <p>Runs VQE on IBM Sherbrooke noise model, applies ZNE correction, fetches real AlphaFold protein data, and predicts binding affinity.</p>
 
+            <div id="status" style="margin: 10px 0; font-family: 'JetBrains Mono', monospace;"></div>
+
             <button id="runBtn" onclick="runPipeline()" class="run-btn">Run Quantum Pipeline</button>
 
             <div id="loading" class="loading hidden">
                 <div class="spinner"></div>
                 <p>Running quantum pipeline...</p>
             </div>
+
+            <script>
+                function runPipeline() {
+                    const status = document.getElementById("status");
+                    status.textContent = "Starting...";
+
+                    // Open SSE stream first
+                    const evtSource = new EventSource("/progress");
+                    evtSource.onmessage = (e) => {
+                        if (e.data === "DONE") {
+                            status.textContent = "Complete!";
+                            evtSource.close();
+                        } else if (e.data === "ERROR") {
+                            status.textContent = "Something went wrong.";
+                            evtSource.close();
+                        } else {
+                            status.textContent = e.data;
+                        }
+                    };
+
+                    // Then trigger the pipeline
+                    fetch("/run", { method: "POST" })
+                        .then(r => r.json())
+                        .then(data => {
+                            // Populate results
+                            document.getElementById("results").classList.remove("hidden");
+                            document.getElementById("vqeEnergy").textContent = data.vqe_energy || "—";
+                            document.getElementById("sherbrookeEnergy").textContent = data.noisy_energy || "—";
+                            document.getElementById("zneEnergy").textContent = data.zne_energy || "—";
+                            document.getElementById("bindingScore").textContent = data.binding_score || "—";
+                            document.getElementById("decision").textContent = data.decision || "—";
+                        });
+                }
+            </script>
 
             <div id="results" class="results hidden">
                 <div class="results-grid">

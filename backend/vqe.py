@@ -6,7 +6,7 @@ from pennylane import numpy as np
 def run_vqe():
    H, n_qubits = build_molecule()
    n_electrons = 2
-   dev = qml.device("lightning.gpu", wires=n_qubits)
+   dev = qml.device("lightning.qubit", wires=n_qubits)
 
 
    hf_state = qml.qchem.hf_state(n_electrons, n_qubits)

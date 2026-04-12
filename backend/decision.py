@@ -2,13 +2,14 @@ from data import generate_training_data
 from backend.screener import model, device
 import torch
 
+_X_q, _X_p, _ = generate_training_data()
+Q_MEAN, Q_STD = _X_q.mean(dim=0).to(device), (_X_q.std(dim=0) + 1e-8).to(device)
+P_MEAN, P_STD = _X_p.mean(dim=0).to(device), (_X_p.std(dim=0) + 1e-8).to(device)
+
 def predict_binding(vqe_energy, zne_energy):
-    quantum_features = torch.tensor([[
-        vqe_energy,
-        0.54,
-        0.04,
-        0.0
-    ]], dtype=torch.float32).to(device)
+    v1 = float(vqe_energy)
+    v2 = float(zne_energy)
+    quantum_features = torch.tensor([[v1, v2, 0.0, 0.0]], dtype=torch.float32).to(device)
 
     from backend.protein import get_protein_features
     protein_raw = torch.tensor(
